@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // retrieve all existing posts
     const existingPosts = JSON.parse(localStorage.getItem("userPosts")) || [];
     // cycle through each post in the userPosts array 
-    existingPosts.forEach(post => {
+    existingPosts.forEach((post, index) => {
         // Iterate through each key-value pair in the post object 
         for(const [key, value] of Object.entries(post)) {
             console.log(`Key: ${key}, Value: ${value}`);
@@ -28,11 +28,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h6 class="card-subtitle mb-2 text-muted">Author: ${post.author}</h6>
                     <p class="card-text">${post.body}</p>
                     <p class="card-text">timestamp: ${post.timestamp}</p>
+                    <div class="vote-container">
+                        <button class="vote-up" data-index="${index}">↑</button>
+                        <span class="vote-up-count">${post.voteUp}</span>
+                        <button class="vote-down" data-index="${index}">↓</button>
+                        <span class="vote-down-count">${post.voteDown}</span>
+                    </div>
                 </div>
             </div>
         `;
         blogPosts.appendChild(postElement);
     })
+
+    // Add event listeners for voting
+    document.querySelectorAll('.vote-up, .vote-down').forEach(button => {
+        button.addEventListener('click', handleVote);
+    });
 
     console.log('DOM fully loaded and parsed');
 });
@@ -62,7 +73,9 @@ function submitPost() {
             title: inputTitle.value,
             author: inputAuthor.value,
             body: inputBody.value,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            voteUp: 0,
+            voteDown: 0
         }
         console.log("blog post created.")
 
@@ -77,6 +90,29 @@ function resetFields() {
     inputTitle.value = "";
     inputAuthor.value = "";
     inputBody.value = "";
+}
+
+function handleVote(event) {
+    const button = event.target;
+    const index = parseInt(button.dataset.index);
+    const isUpvote = button.classList.contains('vote-up');
+
+    // Get current posts from localStorage
+    let posts = JSON.parse(localStorage.getItem("userPosts")) || [];
+
+    // Update the vote count
+    if (isUpvote) {
+        posts[index].voteUp++;
+    } else {
+        posts[index].voteDown++;
+    }
+
+    // Save updated posts back to localStorage
+    localStorage.setItem("userPosts", JSON.stringify(posts));
+
+    // Update the display
+    const voteCountElement = button.nextElementSibling;
+    voteCountElement.textContent = isUpvote ? posts[index].voteUp : posts[index].voteDown;
 }
    
 
